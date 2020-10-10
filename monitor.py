@@ -1,5 +1,7 @@
 #!/usr/bin/env python
+# forked from https://gist.github.com/PRosenb/2ce5159a334af203fca7ef06501775f0
 import sounddevice as sd
+import numpy as np
 import sys
 
 # Download the pkg file of BlackHole
@@ -10,27 +12,26 @@ import sys
 # pip install sounddevice --user
 #
 # Make file executable
-# chmod +x ./forwardSound.py
+# chmod +x ./monitor.py
 #
-# Click on Mac volume control (on top) and choose 'Output Device': 'BlackHole 16ch'
-#
+
 # Check with the following command what name the Built-in Output device has
 # python -m sounddevice
-sd.default.device = 'BlackHole 16ch', 'Built-in Output'
-
-frames = 10
+IN =  'BlackHole 16ch'
+OUT = 'Built-in Output'
 
 def callback(indata, outdata, frames, time, status):
     if status:
         print(status)
-    # if frames > 0:
-    #     print(indata)
-    #     frames = frames - 1
-    # if outdata[0][0] != 0:
-    #     import ipdb;ipdb.set_trace()
-    outdata[:] = indata[:, [2,3]]
+    outdata[:] = indata[:, [2,3]] # want to hear channels 3 and 4
 
-with sd.Stream(channels=(6, 2), callback=callback, blocksize=0, latency="low"):
+output = sd.OutputStream(channels=2, blocksize=0, latency="low", device=OUT)
+output.start()
+
+def input_callback(indata, frames, time, status):
+    output.write(np.ascontiguousarray(indata[:, [2,3]]))
+
+with sd.InputStream(channels=6, callback=input_callback, blocksize=0, latency="low", device=IN):
     print('#' * 80)
     print('press Return to quit')
     print('#' * 80)
