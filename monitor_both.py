@@ -24,9 +24,12 @@ output = sd.OutputStream(channels=2, blocksize=0, latency="low", device=OUT)
 output.start()
 
 def input_callback(indata, frames, time, status):
-    output.write(np.ascontiguousarray(indata[:, [2,3]])) # want to hear channels 3 and 4
+    output.write(np.ascontiguousarray(
+        indata[:, [0,1]] + # PA
+        indata[:, [2,3]] + # cue
+        indata[:, [8,9]])) # system output
 
-with sd.InputStream(channels=6, callback=input_callback, blocksize=0, latency="low", device=IN):
+with sd.InputStream(channels=16, callback=input_callback, blocksize=0, latency="low", device=IN):
     print('#' * 80)
     print('press Return to quit')
     print('#' * 80)

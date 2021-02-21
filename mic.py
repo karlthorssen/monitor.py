@@ -17,16 +17,24 @@ import sys
 
 # Check with the following command what name the Built-in Output device has
 # python -m sounddevice
-IN =  'BlackHole 16ch'
-OUT = 'Built-in Output'
+OUT =  'BlackHole 16ch'
+IN = 'Q9-1'
 
-output = sd.OutputStream(channels=2, blocksize=0, latency="low", device=OUT)
+
+output = sd.OutputStream(channels=16, blocksize=0, latency="low", device=OUT)
 output.start()
 
+# array stuff is fine
 def input_callback(indata, frames, time, status):
-    output.write(np.ascontiguousarray(indata[:, [2,3]])) # want to hear channels 3 and 4
+    output.write(np.ascontiguousarray(
+        np.pad(
+            np.concatenate((indata, indata), axis=1),
+               ((0, 0), (6, 8)),
+               'constant',
+               constant_values=0)
+    ))
 
-with sd.InputStream(channels=6, callback=input_callback, blocksize=0, latency="low", device=IN):
+with sd.InputStream(channels=1, callback=input_callback, blocksize=0, latency="low", device=IN):
     print('#' * 80)
     print('press Return to quit')
     print('#' * 80)
